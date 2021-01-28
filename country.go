@@ -20,6 +20,15 @@ func NewCountry() *Country {
 	return instance
 }
 
+//NewCountryWithExternalFile : NewCountry will create a new instance of country struct
+func NewCountryWithExternalFile(dataFileName string) (*Country, error) {
+	instance := &Country{}
+
+	instance, err := instance.readCountriesDataFileFromExternalFile(dataFileName)
+
+	return instance, err
+}
+
 // Read countries data file
 func (country *Country) readCountriesDataFile() *Country {
 	if len(country.data) > 0 {
@@ -33,6 +42,25 @@ func (country *Country) readCountriesDataFile() *Country {
 	json.Unmarshal([]byte(file), &country.data)
 
 	return country
+}
+
+// Read countries data file
+func (country *Country) readCountriesDataFileFromExternalFile(dataFileName string) (*Country, error) {
+	if len(country.data) > 0 {
+		return country, nil
+	}
+
+	dataPath, err := filepath.Abs(dataFileName)
+	if err != nil {
+		return country, err
+	}
+	file, err := ioutil.ReadFile(dataPath)
+	if err != nil {
+		return country, err
+	}
+	json.Unmarshal([]byte(file), &country.data)
+
+	return country, nil
 }
 
 // All will return all countries name and dialing code
@@ -89,6 +117,18 @@ func (country *Country) GetDialingCode(code string) (interface{}, error) {
 	details, _ := data.(map[string]interface{})
 
 	return details["code"], nil
+}
+
+//GetDialingCodeFromName : GetDialingCode will return a country dialing code by the country ISO 3166-1 Alpha-2 code
+func (country *Country) GetDialingCodeFromName(name string) (interface{}, error) {
+	dialCode := ""
+	for _, item := range country.data {
+		details, _ := item.(map[string]interface{})
+		if details["name"] == name {
+			return details["code"], nil
+		}
+	}
+	return dialCode, nil
 }
 
 // Get countries name and dialing code by the country ISO 3166-1 Alpha-2 codes
